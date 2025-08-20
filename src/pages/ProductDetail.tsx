@@ -75,7 +75,7 @@ const ProductDetail = ({
     : 0;
 
   return (
-    <div className="product-detail-page">
+  <div className="product-detail-page" role="main" aria-label={`Detalle de producto: ${product?.name ?? ''}`}> 
       <div className="container">
         {/* Breadcrumb */}
         <nav className="breadcrumb">
@@ -93,7 +93,7 @@ const ProductDetail = ({
               {product.photos && product.photos.length > 0 ? (
                 <img
                   src={product.photos[safePhotoIdx]}
-                  alt={product.name}
+                  alt={`Imagen principal de ${product.name}`}
                   className="product-img-real"
                   style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', background: '#f3f3f3' }}
                   onError={(e) => {
@@ -115,10 +115,19 @@ const ProductDetail = ({
                     className={`thumbnail${safePhotoIdx === idx ? ' selected' : ''}`}
                     style={{ cursor: 'pointer', border: safePhotoIdx === idx ? '2px solid #0070f3' : '2px solid transparent', borderRadius: 6, padding: 2, background: '#fff' }}
                     onClick={() => setMainPhotoIdx(idx)}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Ver imagen miniatura ${idx + 1} de ${product.name}`}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setMainPhotoIdx(idx);
+                      }
+                    }}
                   >
                     <img
                       src={photo}
-                      alt={`Miniatura ${idx + 1}`}
+                      alt={`Miniatura ${idx + 1} de ${product.name}`}
                       style={{ width: 48, height: 36, objectFit: 'cover', borderRadius: 4 }}
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = 'https://via.placeholder.com/48x36?text=Sin+Img';
@@ -188,9 +197,10 @@ const ProductDetail = ({
                       className={`color-option ${
                         selectedColor === color ? "selected" : ""
                       }`}
+                      aria-label={`Seleccionar color ${color}`}
                       onClick={() => setSelectedColor(color)}
                     >
-                      <div className="color-preview"></div>
+                      <div className="color-preview" aria-hidden="true"></div>
                       <span className="l1">{color}</span>
                     </button>
                   ))}
@@ -211,6 +221,7 @@ const ProductDetail = ({
                       className={`size-option ${
                         selectedSize === size ? "selected" : ""
                       }`}
+                      aria-label={`Seleccionar talla ${size}`}
                       onClick={() => setSelectedSize(size)}
                     >
                       <span className="l1">{size}</span>

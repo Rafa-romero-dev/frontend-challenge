@@ -145,17 +145,18 @@ const QuoteModal: React.FC<QuoteModalProps> = ({
 
   return (
     <div className="quote-modal-overlay" onClick={onClose}>
-      <div className="quote-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="quote-modal" role="dialog" aria-modal="true" aria-labelledby="quote-modal-title" onClick={(e) => e.stopPropagation()}>
         <div className="quote-modal-header">
-          <h2>Simulador de Cotización</h2>
-          <button className="close-btn" onClick={onClose}>
-            <span className="material-icons">close</span>
+          <h2 id="quote-modal-title">Simulador de Cotización</h2>
+          <button className="close-btn" aria-label="Cerrar modal" onClick={onClose}>
+            <span className="material-icons" aria-hidden="true">close</span>
           </button>
         </div>
-        <form className="quote-form" onSubmit={handleSubmit}>
+        <form className="quote-form" onSubmit={handleSubmit} aria-labelledby="quote-modal-title">
           <div className="form-group">
-            <label>Empresa</label>
+            <label htmlFor="company-input">Empresa</label>
             <input
+              id="company-input"
               type="text"
               value={company}
               onChange={(e) => setCompany(e.target.value)}
@@ -163,8 +164,9 @@ const QuoteModal: React.FC<QuoteModalProps> = ({
             />
           </div>
           <div className="form-group">
-            <label>Email</label>
+            <label htmlFor="email-input">Email</label>
             <input
+              id="email-input"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -172,8 +174,9 @@ const QuoteModal: React.FC<QuoteModalProps> = ({
             />
           </div>
           <div className="form-group">
-            <label>RUT</label>
+            <label htmlFor="rut-input">RUT</label>
             <input
+              id="rut-input"
               type="text"
               value={rut}
               onChange={(e) => setRut(e.target.value)}

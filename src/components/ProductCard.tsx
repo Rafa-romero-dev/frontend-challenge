@@ -45,14 +45,14 @@ const ProductCard = ({ product, onQuoteProduct }: ProductCardProps) => {
   }
 
   return (
-    <div className="product-card">
+  <div className="product-card" role="article" aria-label={`Producto: ${product.name}`}> 
       <Link to={`/product/${product.id}`} className="product-link">
         {/* Product Image */}
         <div className="product-image">
           {product.photos && product.photos.length > 0 ? (
             <img
               src={product.photos[0]}
-              alt={product.name}
+              alt={`Imagen principal de ${product.name}`}
               className="product-img-real"
               loading="lazy"
               style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', background: '#f3f3f3' }}
@@ -61,7 +61,7 @@ const ProductCard = ({ product, onQuoteProduct }: ProductCardProps) => {
               }}
             />
           ) : (
-            <div className="image-placeholder">
+            <div className="image-placeholder" aria-hidden="true">
               <span className="material-icons">image</span>
             </div>
           )}
@@ -131,12 +131,13 @@ const ProductCard = ({ product, onQuoteProduct }: ProductCardProps) => {
         <div className="card-actions">
           <button 
             className="btn btn-secondary l1"
+            aria-label={`Cotizar producto ${product.name}`}
             onClick={(e) => {
               e.preventDefault();
               if (typeof onQuoteProduct === 'function') onQuoteProduct(product);
             }}
           >
-            <span className="material-icons">calculate</span>
+            <span className="material-icons" aria-hidden="true">calculate</span>
             Cotizar
           </button>
         </div>

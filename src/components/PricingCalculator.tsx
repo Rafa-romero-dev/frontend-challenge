@@ -66,9 +66,10 @@ const PricingCalculator = ({ product }: PricingCalculatorProps) => {
       <div className="calculator-content">
         {/* Quantity Input */}
         <div className="quantity-section">
-          <label className="quantity-label p1-medium">Cantidad</label>
+          <label className="quantity-label p1-medium" htmlFor="calculator-quantity-input">Cantidad</label>
           <div className="quantity-input-group">
             <input
+              id="calculator-quantity-input"
               type="number"
               value={quantity}
               onChange={(e) => {
