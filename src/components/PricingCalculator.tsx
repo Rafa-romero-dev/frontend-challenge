@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Product } from "../types/Product";
 import "./PricingCalculator.css";
 import { formatToCLP } from "../utils/currency";
+import { useCart } from '../context/CartContext';
 
 interface PricingCalculatorProps {
   product: Product;
@@ -49,6 +50,7 @@ const PricingCalculator = ({ product }: PricingCalculatorProps) => {
     return ((baseTotal - discountedTotal) / baseTotal) * 100;
   };
 
+  const { addToCart } = useCart();
   const currentPrice = calculatePrice(quantity);
   const discountPercent = getDiscount(quantity);
 
@@ -181,8 +183,7 @@ const PricingCalculator = ({ product }: PricingCalculatorProps) => {
           <button
             className="btn btn-primary cta1"
             onClick={() => {
-              // Add to cart functionality
-              alert("Función de agregar al carrito por implementar");
+              addToCart(product, quantity, {});
             }}
           >
             <span className="material-icons">shopping_cart</span>

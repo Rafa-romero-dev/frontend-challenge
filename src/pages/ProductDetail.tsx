@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { products } from '../data/products'
 import { Product } from '../types/Product'
 import PricingCalculator from '../components/PricingCalculator'
+import { useCart } from '../context/CartContext'
 import './ProductDetail.css'
 
 const ProductDetail = () => {
@@ -27,6 +28,7 @@ const ProductDetail = () => {
     }
   }, [id])
 
+  const { addToCart } = useCart()
   // Handle loading state
   if (!product) {
     return (
@@ -195,7 +197,9 @@ const ProductDetail = () => {
                 <button 
                   className={`btn btn-primary cta1 ${!canAddToCart ? 'disabled' : ''}`}
                   disabled={!canAddToCart}
-                  onClick={() => alert('Función de agregar al carrito por implementar')}
+                  onClick={() => {
+                    addToCart(product, quantity, { color: selectedColor, size: selectedSize })
+                  }}
                 >
                   <span className="material-icons">shopping_cart</span>
                   {canAddToCart ? 'Agregar al carrito' : 'No disponible'}
