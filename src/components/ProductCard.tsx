@@ -55,6 +55,9 @@ const ProductCard = ({ product, onQuoteProduct }: ProductCardProps) => {
               alt={`Imagen principal de ${product.name}`}
               className="product-img-real"
               loading="lazy"
+              decoding="async"
+              srcSet={product.photos[0].replace('1000_F_', '400_F_') + ' 400w, ' + product.photos[0] + ' 1000w'}
+              sizes="(max-width: 600px) 100vw, 300px"
               style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', background: '#f3f3f3' }}
               onError={(e) => {
                 (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Sin+Imagen';

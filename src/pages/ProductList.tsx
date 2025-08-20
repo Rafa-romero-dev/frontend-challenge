@@ -3,7 +3,7 @@ import InlineSpinner from "../components/InlineSpinner";
 import { useSearchParams } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 import ProductFilters from "../components/ProductFilters";
-import { products as allProducts } from "../data/products";
+import { useProductData } from "../context/ProductDataContext";
 import { Product } from "../types/Product";
 import "./ProductList.css";
 
@@ -13,8 +13,8 @@ const ProductList = ({
   onQuoteProduct?: (product: Product) => void;
 }) => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [filteredProducts, setFilteredProducts] =
-    useState<Product[]>(allProducts);
+  const { products: allProducts } = useProductData();
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>(allProducts);
   const [selectedCategory, setSelectedCategory] = useState(
     searchParams.get("category") || "all"
   );
@@ -188,7 +188,7 @@ const ProductList = ({
     setSelectedSupplier("");
     setMinPrice("");
     setMaxPrice("");
-    setFilteredProducts(allProducts);
+  setFilteredProducts(allProducts);
     setSearchParams({});
   };
 
@@ -208,7 +208,7 @@ const ProductList = ({
     setMaxPrice(max);
     filterProducts(category, q, sort, supplier, min, max);
     // eslint-disable-next-line
-  }, [searchParams]);
+  }, [searchParams, allProducts]);
 
   return (
     <div className="product-list-page">

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import SpinnerOverlay from "../components/SpinnerOverlay";
 import { useParams, Link } from "react-router-dom";
-import { products } from "../data/products";
+import { useProductData } from "../context/ProductDataContext";
 import { Product } from "../types/Product";
 import PricingCalculator from "../components/PricingCalculator";
 import { useCart } from "../context/CartContext";
@@ -21,13 +21,13 @@ const ProductDetail = ({
   const [quantity, setQuantity] = useState<number>(1);
   const [mainPhotoIdx, setMainPhotoIdx] = useState<number>(0);
 
+  const { getProductById } = useProductData();
   useEffect(() => {
     setLoading(true);
     if (id) {
       setTimeout(() => {
-        const foundProduct = products.find((p) => p.id === parseInt(id));
+        const foundProduct = getProductById(parseInt(id));
         setProduct(foundProduct || null);
-
         // Set default selections
         if (foundProduct?.colors && foundProduct.colors.length > 0) {
           setSelectedColor(foundProduct.colors[0]);
@@ -41,7 +41,7 @@ const ProductDetail = ({
       setProduct(null);
       setLoading(false);
     }
-  }, [id]);
+  }, [id, getProductById]);
 
   const { addToCart } = useCart();
   const { showToast } = useToast();
@@ -95,6 +95,8 @@ const ProductDetail = ({
                   src={product.photos[safePhotoIdx]}
                   alt={`Imagen principal de ${product.name}`}
                   className="product-img-real"
+                  loading="lazy"
+                  decoding="async"
                   style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', background: '#f3f3f3' }}
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x300?text=Sin+Imagen';
@@ -128,6 +130,8 @@ const ProductDetail = ({
                     <img
                       src={photo}
                       alt={`Miniatura ${idx + 1} de ${product.name}`}
+                      loading="lazy"
+                      decoding="async"
                       style={{ width: 48, height: 36, objectFit: 'cover', borderRadius: 4 }}
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = 'https://via.placeholder.com/48x36?text=Sin+Img';
