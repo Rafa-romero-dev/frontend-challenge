@@ -1,52 +1,56 @@
-import { useState } from 'react'
-import { Product } from '../types/Product'
-import './PricingCalculator.css'
+import { useState } from "react";
+import { Product } from "../types/Product";
+import "./PricingCalculator.css";
+import { formatToCLP } from "../utils/currency";
 
 interface PricingCalculatorProps {
-  product: Product
+  product: Product;
 }
 
 const PricingCalculator = ({ product }: PricingCalculatorProps) => {
-  const [quantity, setQuantity] = useState<number>(1)
-  const [selectedBreak, setSelectedBreak] = useState<number>(0)
+  const [quantity, setQuantity] = useState<number>(1);
+  const [selectedBreak, setSelectedBreak] = useState<number>(0);
+
+  // Find the best applicable price break for a given quantity (lowest unit price among eligible)
+  const getApplicableBreak = (qty: number) => {
+    if (!product.priceBreaks || product.priceBreaks.length === 0) return null;
+    const eligible = product.priceBreaks.filter((pb) => qty >= pb.minQty);
+    if (eligible.length === 0) return product.priceBreaks[0];
+    return eligible.reduce((best, pb) => {
+      if (pb.price < best.price) return pb;
+      if (pb.price === best.price && pb.minQty > best.minQty) return pb;
+      return best;
+    });
+  };
 
   // Calculate best pricing for quantity
   const calculatePrice = (qty: number) => {
     if (!product.priceBreaks || product.priceBreaks.length === 0) {
-      return product.basePrice * qty
+      return product.basePrice * qty;
     }
 
-    // Find applicable price break
-    let applicableBreak = product.priceBreaks[0]
-    for (let i = 0; i < product.priceBreaks.length; i++) {
-      if (qty >= product.priceBreaks[i].minQty) {
-        applicableBreak = product.priceBreaks[i]
-      }
-    }
-
-    return applicableBreak.price * qty
-  }
+    const applicableBreak = getApplicableBreak(qty);
+    const unitPrice = applicableBreak
+      ? applicableBreak.price
+      : product.basePrice;
+    return unitPrice * qty;
+  };
 
   // Calculate discount amount
   const getDiscount = (qty: number) => {
     if (!product.priceBreaks || product.priceBreaks.length === 0) {
-      return 0
+      return 0;
     }
 
-    const baseTotal = product.basePrice * qty
-    const discountedTotal = calculatePrice(qty)
-    
+    const baseTotal = product.basePrice * qty;
+    const discountedTotal = calculatePrice(qty);
+
     // Calculate savings percentage
-    return ((baseTotal - discountedTotal) / baseTotal) * 100
-  }
+    return ((baseTotal - discountedTotal) / baseTotal) * 100;
+  };
 
-  // Format price display
-  const formatPrice = (price: number) => {
-    return `$${price.toLocaleString()}` // Should be CLP formatting
-  }
-
-  const currentPrice = calculatePrice(quantity)
-  const discountPercent = getDiscount(quantity)
+  const currentPrice = calculatePrice(quantity);
+  const discountPercent = getDiscount(quantity);
 
   return (
     <div className="pricing-calculator">
@@ -65,12 +69,21 @@ const PricingCalculator = ({ product }: PricingCalculatorProps) => {
             <input
               type="number"
               value={quantity}
-              onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                const parsed = isNaN(val) ? 1 : val;
+                const clamped = Math.min(product.stock, Math.max(1, parsed));
+                setQuantity(clamped);
+              }}
               className="quantity-input p1"
-              min="1"
-              max="10000"
+              min={1}
+              max={product.stock}
+              aria-label={`Cantidad, máximo ${product.stock}`}
             />
             <span className="quantity-unit l1">unidades</span>
+          </div>
+          <div className="quantity-help l1">
+            Máximo {product.stock} unidades disponibles
           </div>
         </div>
 
@@ -80,23 +93,32 @@ const PricingCalculator = ({ product }: PricingCalculatorProps) => {
             <h4 className="breaks-title p1-medium">Descuentos por volumen</h4>
             <div className="price-breaks">
               {product.priceBreaks.map((priceBreak, index) => {
-                const isActive = quantity >= priceBreak.minQty
-                const isSelected = selectedBreak === index
-                
+                const isActive = quantity >= priceBreak.minQty;
+                const isSelected = selectedBreak === index;
+                const exceedsStock = priceBreak.minQty > product.stock;
+
                 return (
-                  <div 
+                  <div
                     key={index}
-                    className={`price-break ${isActive ? 'active' : ''} ${isSelected ? 'selected' : ''}`}
+                    className={`price-break ${isActive ? "active" : ""} ${
+                      isSelected ? "selected" : ""
+                    } ${exceedsStock ? "disabled" : ""}`}
+                    title={
+                      exceedsStock
+                        ? `Excede stock: máximo ${product.stock}`
+                        : undefined
+                    }
                     onClick={() => {
-                      setSelectedBreak(index)
-                      setQuantity(priceBreak.minQty)
+                      if (exceedsStock) return;
+                      setSelectedBreak(index);
+                      setQuantity(Math.min(product.stock, priceBreak.minQty));
                     }}
                   >
                     <div className="break-quantity l1">
                       {priceBreak.minQty}+ unidades
                     </div>
                     <div className="break-price p1-medium">
-                      {formatPrice(priceBreak.price)}
+                      {formatToCLP(priceBreak.price)}
                     </div>
                     {priceBreak.discount && (
                       <div className="break-discount l1">
@@ -104,7 +126,7 @@ const PricingCalculator = ({ product }: PricingCalculatorProps) => {
                       </div>
                     )}
                   </div>
-                )
+                );
               })}
             </div>
           </div>
@@ -115,10 +137,10 @@ const PricingCalculator = ({ product }: PricingCalculatorProps) => {
           <div className="summary-row">
             <span className="summary-label p1">Precio unitario:</span>
             <span className="summary-value p1-medium">
-              {formatPrice(calculatePrice(quantity) / quantity)}
+              {formatToCLP(calculatePrice(quantity) / quantity)}
             </span>
           </div>
-          
+
           <div className="summary-row">
             <span className="summary-label p1">Cantidad:</span>
             <span className="summary-value p1-medium">{quantity} unidades</span>
@@ -136,29 +158,31 @@ const PricingCalculator = ({ product }: PricingCalculatorProps) => {
           <div className="summary-row total-row">
             <span className="summary-label p1-medium">Total:</span>
             <span className="summary-value total-value h2">
-              {formatPrice(currentPrice)}
+              {formatToCLP(currentPrice)}
             </span>
           </div>
         </div>
 
         {/* Actions */}
         <div className="calculator-actions">
-          <button 
+          <button
             className="btn btn-secondary cta1"
             onClick={() => {
               // Handle quote request
-              alert(`Cotización solicitada para ${quantity} unidades de ${product.name}`)
+              alert(
+                `Cotización solicitada para ${quantity} unidades de ${product.name}`
+              );
             }}
           >
             <span className="material-icons">email</span>
             Solicitar cotización oficial
           </button>
-          
-          <button 
+
+          <button
             className="btn btn-primary cta1"
             onClick={() => {
               // Add to cart functionality
-              alert('Función de agregar al carrito por implementar')
+              alert("Función de agregar al carrito por implementar");
             }}
           >
             <span className="material-icons">shopping_cart</span>
@@ -172,10 +196,12 @@ const PricingCalculator = ({ product }: PricingCalculatorProps) => {
             <span className="material-icons">local_shipping</span>
             <div className="info-content">
               <span className="info-title l1">Envío gratis</span>
-              <span className="info-detail l1">En pedidos sobre $50.000</span>
+              <span className="info-detail l1">
+                En pedidos sobre {formatToCLP(50000)}
+              </span>
             </div>
           </div>
-          
+
           <div className="info-item">
             <span className="material-icons">schedule</span>
             <div className="info-content">
@@ -183,7 +209,7 @@ const PricingCalculator = ({ product }: PricingCalculatorProps) => {
               <span className="info-detail l1">7-10 días hábiles</span>
             </div>
           </div>
-          
+
           <div className="info-item">
             <span className="material-icons">verified</span>
             <div className="info-content">
@@ -194,7 +220,7 @@ const PricingCalculator = ({ product }: PricingCalculatorProps) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default PricingCalculator
+export default PricingCalculator;

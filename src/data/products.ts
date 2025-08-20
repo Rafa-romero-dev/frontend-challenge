@@ -4,16 +4,16 @@ import { Product, Category, Supplier } from '../types/Product'
 export const categories: Category[] = [
   { id: 'all', name: 'Todos', icon: 'apps', count: 20 },
   { id: 'tech', name: 'Tecnología', icon: 'devices', count: 8 },
-  { id: 'textile', name: 'Textil', icon: 'checkroom', count: 6 },
-  { id: 'office', name: 'Oficina', icon: 'work', count: 4 },
+  { id: 'textile', name: 'Textil', icon: 'checkroom', count: 5 },
+  { id: 'office', name: 'Oficina', icon: 'work', count: 5 },
   { id: 'home', name: 'Hogar', icon: 'home', count: 2 }
 ]
 
 // Proveedores
 export const suppliers: Supplier[] = [
-  { id: 'smart-gifts', name: 'Smart Gifts', products: 12 },
-  { id: 'top-gifts', name: 'Top Gifts', products: 5 },
-  { id: 'qr-code', name: 'QR Code', products: 3 }
+  { id: 'smart-gifts', name: 'Smart Gifts', products: 8 },
+  { id: 'top-gifts', name: 'Top Gifts', products: 6 },
+  { id: 'qr-code', name: 'QR Code', products: 6 }
 ]
 
 // Product catalog data

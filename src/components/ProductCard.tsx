@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Product } from '../types/Product'
 import './ProductCard.css'
+import { formatToCLP } from '../utils/currency'
 
 interface ProductCardProps {
   product: Product
@@ -15,16 +16,10 @@ const ProductCard = ({ product }: ProductCardProps) => {
       case 'inactive':
         return <span className="status-badge status-inactive l1">No disponible</span>
       case 'pending':
-        // Handle pending status
-        return <span className="status-badge status-active l1">Disponible</span>
+        return <span className="status-badge status-pending l1">Pendiente</span>
       default:
         return null
     }
-  }
-
-  // Format price for display
-  const formatPrice = (price: number) => {
-    return `$${price.toLocaleString()}` // Missing currency and proper formatting
   }
 
   // Check stock availability
@@ -37,13 +32,15 @@ const ProductCard = ({ product }: ProductCardProps) => {
     return <span className="stock-status in-stock l1">{stock} disponibles</span>
   }
 
-  // Calculate discount percentage
-  const getDiscountPrice = () => {
-    if (product.priceBreaks && product.priceBreaks.length > 1) {
-      const bestDiscount = product.priceBreaks[product.priceBreaks.length - 1]
-      return bestDiscount.price
-    }
-    return null
+  // Best discount (lowest unit price across breaks)
+  const getBestBreak = () => {
+    if (!product.priceBreaks || product.priceBreaks.length <= 1) return null
+    return product.priceBreaks.reduce((best, pb) => {
+      if (!best) return pb
+      if (pb.price < best.price) return pb
+      if (pb.price === best.price && pb.minQty > best.minQty) return pb
+      return best
+    }, null as any)
   }
 
   return (
@@ -107,11 +104,11 @@ const ProductCard = ({ product }: ProductCardProps) => {
       {/* Product Footer */}
       <div className="product-footer">
         <div className="price-section">
-          <div className="current-price p1-medium">{formatPrice(product.basePrice)}</div>
-          {getDiscountPrice() && (
+          <div className="current-price p1-medium">{formatToCLP(product.basePrice)}</div>
+      {getBestBreak() && (
             <div className="discount-info">
-              <span className="discount-price l1">{formatPrice(getDiscountPrice()!)}</span>
-              <span className="discount-label l1">desde 50 unidades</span>
+        <span className="discount-price l1">{formatToCLP(getBestBreak()!.price)}</span>
+        <span className="discount-label l1">desde {getBestBreak()!.minQty} unidades</span>
             </div>
           )}
         </div>

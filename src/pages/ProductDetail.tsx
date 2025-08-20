@@ -168,16 +168,26 @@ const ProductDetail = () => {
                   <input 
                     type="number" 
                     value={quantity} 
-                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value)
+                      const parsed = isNaN(val) ? 1 : val
+                      const clamped = Math.min(product.stock, Math.max(1, parsed))
+                      setQuantity(clamped)
+                    }}
                     className="quantity-input"
-                    min="1"
+                    min={1}
+                    max={product.stock}
+                    aria-label={`Cantidad, máximo ${product.stock}`}
                   />
                   <button 
-                    onClick={() => setQuantity(quantity + 1)}
+                    onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
                     className="quantity-btn"
                   >
                     <span className="material-icons">add</span>
                   </button>
+                </div>
+                <div className="quantity-help l1">
+                  Máximo {product.stock} unidades disponibles
                 </div>
               </div>
 

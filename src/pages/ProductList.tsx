@@ -21,10 +21,11 @@ const ProductList = () => {
     }
 
     // Search filter
-    if (search) {
+    if (search && search.trim()) {
+      const term = search.trim().toLowerCase()
       filtered = filtered.filter(product => 
-        product.name.includes(search) ||
-        product.sku.includes(search)
+        product.name.toLowerCase().includes(term) ||
+        product.sku.toLowerCase().includes(term)
       )
     }
 
@@ -34,7 +35,7 @@ const ProductList = () => {
         filtered.sort((a, b) => a.name.localeCompare(b.name))
         break
       case 'price':
-        // Price sorting to implement
+        filtered.sort((a, b) => a.basePrice - b.basePrice)
         break
       case 'stock':
         filtered.sort((a, b) => b.stock - a.stock)
