@@ -8,12 +8,14 @@ interface QuoteModalProps {
   isOpen: boolean;
   onClose: () => void;
   product?: Product | null;
+  initialQuantity?: number;
 }
 
 const QuoteModal: React.FC<QuoteModalProps> = ({
   isOpen,
   onClose,
   product,
+  initialQuantity,
 }) => {
   const { cartItems } = useCart();
   const [company, setCompany] = useState("");
@@ -31,12 +33,13 @@ const QuoteModal: React.FC<QuoteModalProps> = ({
       setRut("");
       setCartAdded(false);
       if (product) {
+        const qty = initialQuantity && initialQuantity > 0 ? initialQuantity : 1;
         setQuoteItems([
           {
             ...product,
-            quantity: 1,
+            quantity: qty,
             unitPrice: product.basePrice,
-            totalPrice: product.basePrice * 1,
+            totalPrice: product.basePrice * qty,
           },
         ]);
       } else {

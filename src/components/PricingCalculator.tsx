@@ -6,9 +6,10 @@ import { useCart } from '../context/CartContext';
 
 interface PricingCalculatorProps {
   product: Product;
+  onQuoteProduct?: (product: Product, quantity?: number) => void;
 }
 
-const PricingCalculator = ({ product }: PricingCalculatorProps) => {
+const PricingCalculator = ({ product, onQuoteProduct }: PricingCalculatorProps) => {
   const [quantity, setQuantity] = useState<number>(1);
   const [selectedBreak, setSelectedBreak] = useState<number>(0);
 
@@ -171,10 +172,13 @@ const PricingCalculator = ({ product }: PricingCalculatorProps) => {
           <button
             className="btn btn-secondary cta1"
             onClick={() => {
-              // Handle quote request
-              alert(
-                `Cotización solicitada para ${quantity} unidades de ${product.name}`
-              );
+              if (typeof onQuoteProduct === 'function') {
+                onQuoteProduct(product, quantity);
+              } else {
+                alert(
+                  `Cotización solicitada para ${quantity} unidades de ${product.name}`
+                );
+              }
             }}
           >
             <span className="material-icons">email</span>

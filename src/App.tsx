@@ -19,11 +19,11 @@ import "./pageTransitions.css";
 function App() {
   const [cartOpen, setCartOpen] = useState(false);
   const [quoteOpen, setQuoteOpen] = useState(false);
-  const [quoteProduct, setQuoteProduct] = useState<Product | null>(null);
+  const [quoteProduct, setQuoteProduct] = useState<{ product: Product; quantity?: number } | null>(null);
   const location = useLocation();
 
-  const handleQuoteProduct = (product: Product) => {
-    setQuoteProduct(product);
+  const handleQuoteProduct = (product: Product, quantity?: number) => {
+    setQuoteProduct({ product, quantity });
     setQuoteOpen(true);
   };
 
@@ -50,7 +50,8 @@ function App() {
               <QuoteModal
                 isOpen={quoteOpen}
                 onClose={() => setQuoteOpen(false)}
-                product={quoteProduct}
+                product={quoteProduct?.product}
+                initialQuantity={quoteProduct?.quantity}
               />
             </CSSTransition>
             <main>

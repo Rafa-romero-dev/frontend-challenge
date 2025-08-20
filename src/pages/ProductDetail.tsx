@@ -8,11 +8,13 @@ import { useCart } from "../context/CartContext";
 import { useToast } from "../components/ToastContext";
 import "./ProductDetail.css";
 
+interface ProductDetailProps {
+  onQuoteProduct?: (product: Product, quantity?: number) => void;
+}
+
 const ProductDetail = ({
   onQuoteProduct,
-}: {
-  onQuoteProduct?: (product: Product) => void;
-}) => {
+}: ProductDetailProps) => {
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -308,7 +310,7 @@ const ProductDetail = ({
 
                 <button
                   className="btn btn-secondary cta1"
-                  onClick={() => onQuoteProduct && onQuoteProduct(product)}
+                  onClick={() => onQuoteProduct && onQuoteProduct(product, quantity)}
                 >
                   <span className="material-icons">calculate</span>
                   Solicitar cotización
@@ -320,7 +322,7 @@ const ProductDetail = ({
 
         {/* Pricing Calculator */}
         <div className="pricing-section">
-          <PricingCalculator product={product} />
+          <PricingCalculator product={product} onQuoteProduct={onQuoteProduct} />
         </div>
       </div>
     </div>
