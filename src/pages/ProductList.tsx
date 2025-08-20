@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 import ProductFilters from "../components/ProductFilters";
 import { products as allProducts } from "../data/products";
@@ -6,14 +7,14 @@ import { Product } from "../types/Product";
 import "./ProductList.css";
 
 const ProductList = () => {
-  const [filteredProducts, setFilteredProducts] =
-    useState<Product[]>(allProducts);
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("name");
-  const [selectedSupplier, setSelectedSupplier] = useState("");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>(allProducts);
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+  const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'name');
+  const [selectedSupplier, setSelectedSupplier] = useState(searchParams.get('supplier') || '');
+  const [minPrice, setMinPrice] = useState(searchParams.get('min') || '');
+  const [maxPrice, setMaxPrice] = useState(searchParams.get('max') || '');
 
   // Filter and sort products based on all criteria
   const filterProducts = (
@@ -74,76 +75,94 @@ const ProductList = () => {
     setFilteredProducts(filtered);
   };
 
+  const updateURLParams = (params: {
+    category?: string;
+    q?: string;
+    sort?: string;
+    supplier?: string;
+    min?: string;
+    max?: string;
+  }) => {
+    const newParams: any = {};
+    if (params.category && params.category !== 'all') newParams.category = params.category;
+    if (params.q) newParams.q = params.q;
+    if (params.sort && params.sort !== 'name') newParams.sort = params.sort;
+    if (params.supplier) newParams.supplier = params.supplier;
+    if (params.min) newParams.min = params.min;
+    if (params.max) newParams.max = params.max;
+    setSearchParams(newParams);
+  };
+
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
-    filterProducts(
+    updateURLParams({
       category,
-      searchQuery,
-      sortBy,
-      selectedSupplier,
-      minPrice,
-      maxPrice
-    );
+      q: searchQuery,
+      sort: sortBy,
+      supplier: selectedSupplier,
+      min: minPrice,
+      max: maxPrice,
+    });
   };
 
   const handleSearchChange = (search: string) => {
     setSearchQuery(search);
-    filterProducts(
-      selectedCategory,
-      search,
-      sortBy,
-      selectedSupplier,
-      minPrice,
-      maxPrice
-    );
+    updateURLParams({
+      category: selectedCategory,
+      q: search,
+      sort: sortBy,
+      supplier: selectedSupplier,
+      min: minPrice,
+      max: maxPrice,
+    });
   };
 
   const handleSortChange = (sort: string) => {
     setSortBy(sort);
-    filterProducts(
-      selectedCategory,
-      searchQuery,
+    updateURLParams({
+      category: selectedCategory,
+      q: searchQuery,
       sort,
-      selectedSupplier,
-      minPrice,
-      maxPrice
-    );
+      supplier: selectedSupplier,
+      min: minPrice,
+      max: maxPrice,
+    });
   };
 
   const handleSupplierChange = (supplier: string) => {
     setSelectedSupplier(supplier);
-    filterProducts(
-      selectedCategory,
-      searchQuery,
-      sortBy,
+    updateURLParams({
+      category: selectedCategory,
+      q: searchQuery,
+      sort: sortBy,
       supplier,
-      minPrice,
-      maxPrice
-    );
+      min: minPrice,
+      max: maxPrice,
+    });
   };
 
   const handleMinPriceChange = (min: string) => {
     setMinPrice(min);
-    filterProducts(
-      selectedCategory,
-      searchQuery,
-      sortBy,
-      selectedSupplier,
+    updateURLParams({
+      category: selectedCategory,
+      q: searchQuery,
+      sort: sortBy,
+      supplier: selectedSupplier,
       min,
-      maxPrice
-    );
+      max: maxPrice,
+    });
   };
 
   const handleMaxPriceChange = (max: string) => {
     setMaxPrice(max);
-    filterProducts(
-      selectedCategory,
-      searchQuery,
-      sortBy,
-      selectedSupplier,
-      minPrice,
-      max
-    );
+    updateURLParams({
+      category: selectedCategory,
+      q: searchQuery,
+      sort: sortBy,
+      supplier: selectedSupplier,
+      min: minPrice,
+      max,
+    });
   };
 
   const handleClearFilters = () => {
@@ -154,7 +173,26 @@ const ProductList = () => {
     setMinPrice("");
     setMaxPrice("");
     setFilteredProducts(allProducts);
+    setSearchParams({});
   };
+
+  // Sincroniza el filtrado cada vez que cambian los query params
+  useEffect(() => {
+    const category = searchParams.get('category') || 'all';
+    const q = searchParams.get('q') || '';
+    const sort = searchParams.get('sort') || 'name';
+    const supplier = searchParams.get('supplier') || '';
+    const min = searchParams.get('min') || '';
+    const max = searchParams.get('max') || '';
+    setSelectedCategory(category);
+    setSearchQuery(q);
+    setSortBy(sort);
+    setSelectedSupplier(supplier);
+    setMinPrice(min);
+    setMaxPrice(max);
+    filterProducts(category, q, sort, supplier, min, max);
+    // eslint-disable-next-line
+  }, [searchParams]);
 
   return (
     <div className="product-list-page">
