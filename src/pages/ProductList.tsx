@@ -1,65 +1,214 @@
-import { useState } from 'react'
-import ProductCard from '../components/ProductCard'
-import ProductFilters from '../components/ProductFilters'
-import { products as allProducts } from '../data/products'
-import { Product } from '../types/Product'
-import './ProductList.css'
+import { useState, useEffect } from "react";
+import InlineSpinner from "../components/InlineSpinner";
+import { useSearchParams } from "react-router-dom";
+import ProductCard from "../components/ProductCard";
+import ProductFilters from "../components/ProductFilters";
+import { useProductData } from "../context/ProductDataContext";
+import { Product } from "../types/Product";
+import "./ProductList.css";
 
-const ProductList = () => {
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>(allProducts)
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [sortBy, setSortBy] = useState('name')
+const ProductList = ({
+  onQuoteProduct,
+}: {
+  onQuoteProduct?: (product: Product) => void;
+}) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { products: allProducts } = useProductData();
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>(allProducts);
+  const [selectedCategory, setSelectedCategory] = useState(
+    searchParams.get("category") || "all"
+  );
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+  const [sortBy, setSortBy] = useState(searchParams.get("sort") || "name");
+  const [selectedSupplier, setSelectedSupplier] = useState(
+    searchParams.get("supplier") || ""
+  );
+  const [minPrice, setMinPrice] = useState(searchParams.get("min") || "");
+  const [maxPrice, setMaxPrice] = useState(searchParams.get("max") || "");
 
-  // Filter and sort products based on criteria
-  const filterProducts = (category: string, search: string, sort: string) => {
-    let filtered = [...allProducts]
+  // Filter and sort products based on all criteria
+  const [loading, setLoading] = useState(false);
+  const filterProducts = (
+    category: string,
+    search: string,
+    sort: string,
+    supplier: string,
+    min: string,
+    max: string
+  ) => {
+    setLoading(true);
+    setTimeout(() => {
+      let filtered = [...allProducts];
 
-    // Category filter
-    if (category !== 'all') {
-      filtered = filtered.filter(product => product.category === category)
-    }
+      // Category filter
+      if (category !== "all") {
+        filtered = filtered.filter((product) => product.category === category);
+      }
 
-    // Search filter
-    if (search) {
-      filtered = filtered.filter(product => 
-        product.name.includes(search) ||
-        product.sku.includes(search)
-      )
-    }
+      // Supplier filter
+      if (supplier) {
+        filtered = filtered.filter((product) => product.supplier === supplier);
+      }
 
-    // Sorting logic
-    switch (sort) {
-      case 'name':
-        filtered.sort((a, b) => a.name.localeCompare(b.name))
-        break
-      case 'price':
-        // Price sorting to implement
-        break
-      case 'stock':
-        filtered.sort((a, b) => b.stock - a.stock)
-        break
-      default:
-        break
-    }
+      // Price range filter
+      const minVal = min ? parseInt(min) : null;
+      const maxVal = max ? parseInt(max) : null;
+      if (minVal !== null) {
+        filtered = filtered.filter((product) => product.basePrice >= minVal);
+      }
+      if (maxVal !== null) {
+        filtered = filtered.filter((product) => product.basePrice <= maxVal);
+      }
 
-    setFilteredProducts(filtered)
-  }
+      // Search filter
+      if (search && search.trim()) {
+        const term = search.trim().toLowerCase();
+        filtered = filtered.filter(
+          (product) =>
+            product.name.toLowerCase().includes(term) ||
+            product.sku.toLowerCase().includes(term)
+        );
+      }
+
+      // Sorting logic
+      switch (sort) {
+        case "name":
+          filtered.sort((a, b) => a.name.localeCompare(b.name));
+          break;
+        case "price":
+          filtered.sort((a, b) => a.basePrice - b.basePrice);
+          break;
+        case "stock":
+          filtered.sort((a, b) => b.stock - a.stock);
+          break;
+        default:
+          break;
+      }
+
+      setFilteredProducts(filtered);
+      setLoading(false);
+    }, 500);
+  };
+
+  const updateURLParams = (params: {
+    category?: string;
+    q?: string;
+    sort?: string;
+    supplier?: string;
+    min?: string;
+    max?: string;
+  }) => {
+    const newParams: any = {};
+    if (params.category && params.category !== "all")
+      newParams.category = params.category;
+    if (params.q) newParams.q = params.q;
+    if (params.sort && params.sort !== "name") newParams.sort = params.sort;
+    if (params.supplier) newParams.supplier = params.supplier;
+    if (params.min) newParams.min = params.min;
+    if (params.max) newParams.max = params.max;
+    setSearchParams(newParams);
+  };
 
   const handleCategoryChange = (category: string) => {
-    setSelectedCategory(category)
-    filterProducts(category, searchQuery, sortBy)
-  }
+    setSelectedCategory(category);
+    updateURLParams({
+      category,
+      q: searchQuery,
+      sort: sortBy,
+      supplier: selectedSupplier,
+      min: minPrice,
+      max: maxPrice,
+    });
+  };
 
   const handleSearchChange = (search: string) => {
-    setSearchQuery(search)
-    filterProducts(selectedCategory, search, sortBy)
-  }
+    setSearchQuery(search);
+    updateURLParams({
+      category: selectedCategory,
+      q: search,
+      sort: sortBy,
+      supplier: selectedSupplier,
+      min: minPrice,
+      max: maxPrice,
+    });
+  };
 
   const handleSortChange = (sort: string) => {
-    setSortBy(sort)
-    filterProducts(selectedCategory, searchQuery, sort)
-  }
+    setSortBy(sort);
+    updateURLParams({
+      category: selectedCategory,
+      q: searchQuery,
+      sort,
+      supplier: selectedSupplier,
+      min: minPrice,
+      max: maxPrice,
+    });
+  };
+
+  const handleSupplierChange = (supplier: string) => {
+    setSelectedSupplier(supplier);
+    updateURLParams({
+      category: selectedCategory,
+      q: searchQuery,
+      sort: sortBy,
+      supplier,
+      min: minPrice,
+      max: maxPrice,
+    });
+  };
+
+  const handleMinPriceChange = (min: string) => {
+    setMinPrice(min);
+    updateURLParams({
+      category: selectedCategory,
+      q: searchQuery,
+      sort: sortBy,
+      supplier: selectedSupplier,
+      min,
+      max: maxPrice,
+    });
+  };
+
+  const handleMaxPriceChange = (max: string) => {
+    setMaxPrice(max);
+    updateURLParams({
+      category: selectedCategory,
+      q: searchQuery,
+      sort: sortBy,
+      supplier: selectedSupplier,
+      min: minPrice,
+      max,
+    });
+  };
+
+  const handleClearFilters = () => {
+    setSelectedCategory("all");
+    setSearchQuery("");
+    setSortBy("name");
+    setSelectedSupplier("");
+    setMinPrice("");
+    setMaxPrice("");
+  setFilteredProducts(allProducts);
+    setSearchParams({});
+  };
+
+  // Sincroniza el filtrado cada vez que cambian los query params
+  useEffect(() => {
+    const category = searchParams.get("category") || "all";
+    const q = searchParams.get("q") || "";
+    const sort = searchParams.get("sort") || "name";
+    const supplier = searchParams.get("supplier") || "";
+    const min = searchParams.get("min") || "";
+    const max = searchParams.get("max") || "";
+    setSelectedCategory(category);
+    setSearchQuery(q);
+    setSortBy(sort);
+    setSelectedSupplier(supplier);
+    setMinPrice(min);
+    setMaxPrice(max);
+    filterProducts(category, q, sort, supplier, min, max);
+    // eslint-disable-next-line
+  }, [searchParams, allProducts]);
 
   return (
     <div className="product-list-page">
@@ -72,10 +221,12 @@ const ProductList = () => {
               Descubre nuestra selección de productos promocionales premium
             </p>
           </div>
-          
+
           <div className="page-stats">
             <div className="stat-item">
-              <span className="stat-value p1-medium">{filteredProducts.length}</span>
+              <span className="stat-value p1-medium">
+                {filteredProducts.length}
+              </span>
               <span className="stat-label l1">productos</span>
             </div>
             <div className="stat-item">
@@ -90,24 +241,35 @@ const ProductList = () => {
           selectedCategory={selectedCategory}
           searchQuery={searchQuery}
           sortBy={sortBy}
+          selectedSupplier={selectedSupplier}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
           onCategoryChange={handleCategoryChange}
           onSearchChange={handleSearchChange}
           onSortChange={handleSortChange}
+          onSupplierChange={handleSupplierChange}
+          onMinPriceChange={handleMinPriceChange}
+          onMaxPriceChange={handleMaxPriceChange}
+          onClearFilters={handleClearFilters}
         />
 
         {/* Products Grid */}
         <div className="products-section">
-          {filteredProducts.length === 0 ? (
+          {loading ? (
+            <InlineSpinner />
+          ) : filteredProducts.length === 0 ? (
             <div className="empty-state">
               <span className="material-icons">search_off</span>
               <h3 className="h2">No hay productos</h3>
-              <p className="p1">No se encontraron productos que coincidan con tu búsqueda.</p>
-              <button 
+              <p className="p1">
+                No se encontraron productos que coincidan con tu búsqueda.
+              </p>
+              <button
                 className="btn btn-primary cta1"
                 onClick={() => {
-                  setSearchQuery('')
-                  setSelectedCategory('all')
-                  filterProducts('all', '', sortBy)
+                  setSearchQuery("");
+                  setSelectedCategory("all");
+                  filterProducts("all", "", sortBy, "", "", "");
                 }}
               >
                 Ver todos los productos
@@ -115,15 +277,19 @@ const ProductList = () => {
             </div>
           ) : (
             <div className="products-grid">
-              {filteredProducts.map(product => (
-                <ProductCard key={product.id} product={product} />
+              {filteredProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onQuoteProduct={onQuoteProduct}
+                />
               ))}
             </div>
           )}
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ProductList
+export default ProductList;

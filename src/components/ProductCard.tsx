@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom'
 import { Product } from '../types/Product'
 import './ProductCard.css'
+import { formatToCLP } from '../utils/currency'
 
 interface ProductCardProps {
-  product: Product
+  product: Product;
+  onQuoteProduct?: (product: Product) => void;
 }
 
-const ProductCard = ({ product }: ProductCardProps) => {
+const ProductCard = ({ product, onQuoteProduct }: ProductCardProps) => {
   // Handle product status display
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -15,16 +17,10 @@ const ProductCard = ({ product }: ProductCardProps) => {
       case 'inactive':
         return <span className="status-badge status-inactive l1">No disponible</span>
       case 'pending':
-        // Handle pending status
-        return <span className="status-badge status-active l1">Disponible</span>
+        return <span className="status-badge status-pending l1">Pendiente</span>
       default:
         return null
     }
-  }
-
-  // Format price for display
-  const formatPrice = (price: number) => {
-    return `$${price.toLocaleString()}` // Missing currency and proper formatting
   }
 
   // Check stock availability
@@ -37,25 +33,41 @@ const ProductCard = ({ product }: ProductCardProps) => {
     return <span className="stock-status in-stock l1">{stock} disponibles</span>
   }
 
-  // Calculate discount percentage
-  const getDiscountPrice = () => {
-    if (product.priceBreaks && product.priceBreaks.length > 1) {
-      const bestDiscount = product.priceBreaks[product.priceBreaks.length - 1]
-      return bestDiscount.price
-    }
-    return null
+  // Best discount (lowest unit price across breaks)
+  const getBestBreak = () => {
+    if (!product.priceBreaks || product.priceBreaks.length <= 1) return null
+    return product.priceBreaks.reduce((best, pb) => {
+      if (!best) return pb
+      if (pb.price < best.price) return pb
+      if (pb.price === best.price && pb.minQty > best.minQty) return pb
+      return best
+    }, null as any)
   }
 
   return (
-    <div className="product-card">
+  <div className="product-card" role="article" aria-label={`Producto: ${product.name}`}> 
       <Link to={`/product/${product.id}`} className="product-link">
         {/* Product Image */}
         <div className="product-image">
-          {/* Bug: no real image handling */}
-          <div className="image-placeholder">
-            <span className="material-icons">image</span>
-          </div>
-          
+          {product.photos && product.photos.length > 0 ? (
+            <img
+              src={product.photos[0]}
+              alt={`Imagen principal de ${product.name}`}
+              className="product-img-real"
+              loading="lazy"
+              decoding="async"
+              srcSet={product.photos[0].replace('1000_F_', '400_F_') + ' 400w, ' + product.photos[0] + ' 1000w'}
+              sizes="(max-width: 600px) 100vw, 300px"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', background: '#f3f3f3' }}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Sin+Imagen';
+              }}
+            />
+          ) : (
+            <div className="image-placeholder" aria-hidden="true">
+              <span className="material-icons">image</span>
+            </div>
+          )}
           {/* Status Badge */}
           <div className="product-status">
             {getStatusBadge(product.status)}
@@ -78,12 +90,15 @@ const ProductCard = ({ product }: ProductCardProps) => {
             {getStockStatus(product.stock)}
           </div>
 
-          {/* Features - Bug: displays all features without limit */}
-          {product.features && (
+          {/* Features - show only first 2, and '+N más' if more */}
+          {product.features && product.features.length > 0 && (
             <div className="product-features">
-              {product.features.map((feature, index) => (
+              {product.features.slice(0, 2).map((feature, index) => (
                 <span key={index} className="feature-tag l1">{feature}</span>
               ))}
+              {product.features.length > 2 && (
+                <span className="feature-tag l1">+{product.features.length - 2} más</span>
+              )}
             </div>
           )}
 
@@ -107,11 +122,11 @@ const ProductCard = ({ product }: ProductCardProps) => {
       {/* Product Footer */}
       <div className="product-footer">
         <div className="price-section">
-          <div className="current-price p1-medium">{formatPrice(product.basePrice)}</div>
-          {getDiscountPrice() && (
+          <div className="current-price p1-medium">{formatToCLP(product.basePrice)}</div>
+      {getBestBreak() && (
             <div className="discount-info">
-              <span className="discount-price l1">{formatPrice(getDiscountPrice()!)}</span>
-              <span className="discount-label l1">desde 50 unidades</span>
+        <span className="discount-price l1">{formatToCLP(getBestBreak()!.price)}</span>
+        <span className="discount-label l1">desde {getBestBreak()!.minQty} unidades</span>
             </div>
           )}
         </div>
@@ -119,12 +134,13 @@ const ProductCard = ({ product }: ProductCardProps) => {
         <div className="card-actions">
           <button 
             className="btn btn-secondary l1"
+            aria-label={`Cotizar producto ${product.name}`}
             onClick={(e) => {
-              e.preventDefault()
-              alert('Función de cotización por implementar')
+              e.preventDefault();
+              if (typeof onQuoteProduct === 'function') onQuoteProduct(product);
             }}
           >
-            <span className="material-icons">calculate</span>
+            <span className="material-icons" aria-hidden="true">calculate</span>
             Cotizar
           </button>
         </div>

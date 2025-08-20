@@ -1,0 +1,25 @@
+/* Simple spinner overlay for loading states */
+.spinner-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.spinner {
+  border: 6px solid #eee;
+  border-top: 6px solid #0070f3;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
