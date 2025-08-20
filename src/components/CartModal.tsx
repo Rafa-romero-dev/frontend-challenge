@@ -1,4 +1,5 @@
 import React from 'react';
+import { useToast } from '../components/ToastContext';
 import { useCart } from '../context/CartContext';
 import { formatToCLP } from '../utils/currency';
   import type { CartItem } from '../types/Product';
@@ -13,6 +14,7 @@ interface CartModalProps {
 const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
 
   const { cartItems, updateQuantity, removeFromCart } = useCart();
+  const { showToast } = useToast();
   const total = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
 
   // Get latest stock for a cart item (by id, color, size)
@@ -63,7 +65,13 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
                   />
                   <button
                     className="qty-btn"
-                    onClick={() => updateQuantity(item, item.quantity + 1)}
+                    onClick={() => {
+                      if (item.quantity >= getStockForItem(item)) {
+                        showToast('No hay suficiente stock para agregar más unidades.', 'error');
+                        return;
+                      }
+                      updateQuantity(item, item.quantity + 1);
+                    }}
                     disabled={item.quantity >= getStockForItem(item)}
                   >
                     <span className="material-icons">add</span>

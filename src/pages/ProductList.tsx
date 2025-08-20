@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import InlineSpinner from "../components/InlineSpinner";
 import { useSearchParams } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 import ProductFilters from "../components/ProductFilters";
@@ -26,6 +27,7 @@ const ProductList = ({
   const [maxPrice, setMaxPrice] = useState(searchParams.get("max") || "");
 
   // Filter and sort products based on all criteria
+  const [loading, setLoading] = useState(false);
   const filterProducts = (
     category: string,
     search: string,
@@ -34,54 +36,58 @@ const ProductList = ({
     min: string,
     max: string
   ) => {
-    let filtered = [...allProducts];
+    setLoading(true);
+    setTimeout(() => {
+      let filtered = [...allProducts];
 
-    // Category filter
-    if (category !== "all") {
-      filtered = filtered.filter((product) => product.category === category);
-    }
+      // Category filter
+      if (category !== "all") {
+        filtered = filtered.filter((product) => product.category === category);
+      }
 
-    // Supplier filter
-    if (supplier) {
-      filtered = filtered.filter((product) => product.supplier === supplier);
-    }
+      // Supplier filter
+      if (supplier) {
+        filtered = filtered.filter((product) => product.supplier === supplier);
+      }
 
-    // Price range filter
-    const minVal = min ? parseInt(min) : null;
-    const maxVal = max ? parseInt(max) : null;
-    if (minVal !== null) {
-      filtered = filtered.filter((product) => product.basePrice >= minVal);
-    }
-    if (maxVal !== null) {
-      filtered = filtered.filter((product) => product.basePrice <= maxVal);
-    }
+      // Price range filter
+      const minVal = min ? parseInt(min) : null;
+      const maxVal = max ? parseInt(max) : null;
+      if (minVal !== null) {
+        filtered = filtered.filter((product) => product.basePrice >= minVal);
+      }
+      if (maxVal !== null) {
+        filtered = filtered.filter((product) => product.basePrice <= maxVal);
+      }
 
-    // Search filter
-    if (search && search.trim()) {
-      const term = search.trim().toLowerCase();
-      filtered = filtered.filter(
-        (product) =>
-          product.name.toLowerCase().includes(term) ||
-          product.sku.toLowerCase().includes(term)
-      );
-    }
+      // Search filter
+      if (search && search.trim()) {
+        const term = search.trim().toLowerCase();
+        filtered = filtered.filter(
+          (product) =>
+            product.name.toLowerCase().includes(term) ||
+            product.sku.toLowerCase().includes(term)
+        );
+      }
 
-    // Sorting logic
-    switch (sort) {
-      case "name":
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case "price":
-        filtered.sort((a, b) => a.basePrice - b.basePrice);
-        break;
-      case "stock":
-        filtered.sort((a, b) => b.stock - a.stock);
-        break;
-      default:
-        break;
-    }
+      // Sorting logic
+      switch (sort) {
+        case "name":
+          filtered.sort((a, b) => a.name.localeCompare(b.name));
+          break;
+        case "price":
+          filtered.sort((a, b) => a.basePrice - b.basePrice);
+          break;
+        case "stock":
+          filtered.sort((a, b) => b.stock - a.stock);
+          break;
+        default:
+          break;
+      }
 
-    setFilteredProducts(filtered);
+      setFilteredProducts(filtered);
+      setLoading(false);
+    }, 500);
   };
 
   const updateURLParams = (params: {
@@ -249,7 +255,9 @@ const ProductList = ({
 
         {/* Products Grid */}
         <div className="products-section">
-          {filteredProducts.length === 0 ? (
+          {loading ? (
+            <InlineSpinner />
+          ) : filteredProducts.length === 0 ? (
             <div className="empty-state">
               <span className="material-icons">search_off</span>
               <h3 className="h2">No hay productos</h3>

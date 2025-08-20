@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect, useContext, ReactNode } from 'react'
+import { useToast } from '../components/ToastContext';
 import { CartItem, Product } from '../types/Product'
 import { products } from '../data/products'
 
@@ -19,6 +20,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     return storedCart ? JSON.parse(storedCart) : [];
   });
 
+  const { showToast } = useToast();
+
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cartItems))
   }, [cartItems])
@@ -35,6 +38,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       const stock = latest ? latest.stock : product.stock
       let newQty = quantity
       if (existingItem) {
+        if (existingItem.quantity >= stock) {
+          showToast('Ya tienes el máximo disponible de este producto en el carrito.', 'error');
+          return prevItems;
+        }
+        if (existingItem.quantity + quantity > stock) {
+          showToast('No hay suficiente stock para agregar esa cantidad.', 'error');
+        }
         newQty = Math.min(stock, existingItem.quantity + quantity)
         return prevItems.map(item =>
           item.id === product.id &&
@@ -44,6 +54,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             : item
         )
       } else {
+        if (quantity > stock) {
+          showToast('No hay suficiente stock para agregar esa cantidad.', 'error');
+        }
         newQty = Math.min(stock, quantity)
         const newItem: CartItem = {
           ...product,
@@ -62,6 +75,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     // Get latest stock from products array
     const latest = products.find(p => p.id === item.id)
     const stock = latest ? latest.stock : item.stock
+    if (quantity > stock) {
+      showToast('No hay suficiente stock para esa cantidad.', 'error');
+    }
     const clamped = Math.max(1, Math.min(stock, quantity))
     setCartItems(prevItems => prevItems.map(ci =>
       ci.id === item.id && ci.selectedColor === item.selectedColor && ci.selectedSize === item.selectedSize

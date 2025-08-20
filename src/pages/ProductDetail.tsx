@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
+import SpinnerOverlay from "../components/SpinnerOverlay";
 import { useParams, Link } from "react-router-dom";
 import { products } from "../data/products";
 import { Product } from "../types/Product";
 import PricingCalculator from "../components/PricingCalculator";
 import { useCart } from "../context/CartContext";
+import { useToast } from "../components/ToastContext";
 import "./ProductDetail.css";
 
 const ProductDetail = ({
@@ -13,27 +15,38 @@ const ProductDetail = ({
 }) => {
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [quantity, setQuantity] = useState<number>(1);
 
   useEffect(() => {
+    setLoading(true);
     if (id) {
-      const foundProduct = products.find((p) => p.id === parseInt(id));
-      setProduct(foundProduct || null);
+      setTimeout(() => {
+        const foundProduct = products.find((p) => p.id === parseInt(id));
+        setProduct(foundProduct || null);
 
-      // Set default selections
-      if (foundProduct?.colors && foundProduct.colors.length > 0) {
-        setSelectedColor(foundProduct.colors[0]);
-      }
-      if (foundProduct?.sizes && foundProduct.sizes.length > 0) {
-        setSelectedSize(foundProduct.sizes[0]);
-      }
+        // Set default selections
+        if (foundProduct?.colors && foundProduct.colors.length > 0) {
+          setSelectedColor(foundProduct.colors[0]);
+        }
+        if (foundProduct?.sizes && foundProduct.sizes.length > 0) {
+          setSelectedSize(foundProduct.sizes[0]);
+        }
+        setLoading(false);
+      }, 200);
+    } else {
+      setProduct(null);
+      setLoading(false);
     }
   }, [id]);
 
   const { addToCart } = useCart();
-  // Handle loading state
+  const { showToast } = useToast();
+  if (loading) {
+    return <SpinnerOverlay />;
+  }
   if (!product) {
     return (
       <div className="container">
@@ -205,9 +218,13 @@ const ProductDetail = ({
                     aria-label={`Cantidad, máximo ${product.stock}`}
                   />
                   <button
-                    onClick={() =>
-                      setQuantity(Math.min(product.stock, quantity + 1))
-                    }
+                    onClick={() => {
+                      if (quantity >= product.stock) {
+                        showToast('No hay suficiente stock para agregar más unidades.', 'error');
+                        return;
+                      }
+                      setQuantity(Math.min(product.stock, quantity + 1));
+                    }}
                     className="quantity-btn"
                   >
                     <span className="material-icons">add</span>
@@ -225,6 +242,14 @@ const ProductDetail = ({
                   }`}
                   disabled={!canAddToCart}
                   onClick={() => {
+                    if (!canAddToCart) {
+                      showToast('Este producto no está disponible para agregar al carrito.', 'error');
+                      return;
+                    }
+                    if (quantity > product.stock) {
+                      showToast('No hay suficiente stock para esa cantidad.', 'error');
+                      return;
+                    }
                     addToCart(product, quantity, {
                       color: selectedColor,
                       size: selectedSize,
