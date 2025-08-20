@@ -6,15 +6,24 @@ import { products as allProducts } from "../data/products";
 import { Product } from "../types/Product";
 import "./ProductList.css";
 
-const ProductList = () => {
+const ProductList = ({
+  onQuoteProduct,
+}: {
+  onQuoteProduct?: (product: Product) => void;
+}) => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>(allProducts);
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
-  const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'name');
-  const [selectedSupplier, setSelectedSupplier] = useState(searchParams.get('supplier') || '');
-  const [minPrice, setMinPrice] = useState(searchParams.get('min') || '');
-  const [maxPrice, setMaxPrice] = useState(searchParams.get('max') || '');
+  const [filteredProducts, setFilteredProducts] =
+    useState<Product[]>(allProducts);
+  const [selectedCategory, setSelectedCategory] = useState(
+    searchParams.get("category") || "all"
+  );
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+  const [sortBy, setSortBy] = useState(searchParams.get("sort") || "name");
+  const [selectedSupplier, setSelectedSupplier] = useState(
+    searchParams.get("supplier") || ""
+  );
+  const [minPrice, setMinPrice] = useState(searchParams.get("min") || "");
+  const [maxPrice, setMaxPrice] = useState(searchParams.get("max") || "");
 
   // Filter and sort products based on all criteria
   const filterProducts = (
@@ -84,9 +93,10 @@ const ProductList = () => {
     max?: string;
   }) => {
     const newParams: any = {};
-    if (params.category && params.category !== 'all') newParams.category = params.category;
+    if (params.category && params.category !== "all")
+      newParams.category = params.category;
     if (params.q) newParams.q = params.q;
-    if (params.sort && params.sort !== 'name') newParams.sort = params.sort;
+    if (params.sort && params.sort !== "name") newParams.sort = params.sort;
     if (params.supplier) newParams.supplier = params.supplier;
     if (params.min) newParams.min = params.min;
     if (params.max) newParams.max = params.max;
@@ -178,12 +188,12 @@ const ProductList = () => {
 
   // Sincroniza el filtrado cada vez que cambian los query params
   useEffect(() => {
-    const category = searchParams.get('category') || 'all';
-    const q = searchParams.get('q') || '';
-    const sort = searchParams.get('sort') || 'name';
-    const supplier = searchParams.get('supplier') || '';
-    const min = searchParams.get('min') || '';
-    const max = searchParams.get('max') || '';
+    const category = searchParams.get("category") || "all";
+    const q = searchParams.get("q") || "";
+    const sort = searchParams.get("sort") || "name";
+    const supplier = searchParams.get("supplier") || "";
+    const min = searchParams.get("min") || "";
+    const max = searchParams.get("max") || "";
     setSelectedCategory(category);
     setSearchQuery(q);
     setSortBy(sort);
@@ -260,7 +270,11 @@ const ProductList = () => {
           ) : (
             <div className="products-grid">
               {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onQuoteProduct={onQuoteProduct}
+                />
               ))}
             </div>
           )}

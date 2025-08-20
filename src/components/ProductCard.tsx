@@ -4,10 +4,11 @@ import './ProductCard.css'
 import { formatToCLP } from '../utils/currency'
 
 interface ProductCardProps {
-  product: Product
+  product: Product;
+  onQuoteProduct?: (product: Product) => void;
 }
 
-const ProductCard = ({ product }: ProductCardProps) => {
+const ProductCard = ({ product, onQuoteProduct }: ProductCardProps) => {
   // Handle product status display
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -117,8 +118,8 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <button 
             className="btn btn-secondary l1"
             onClick={(e) => {
-              e.preventDefault()
-              alert('Función de cotización por implementar')
+              e.preventDefault();
+              if (typeof onQuoteProduct === 'function') onQuoteProduct(product);
             }}
           >
             <span className="material-icons">calculate</span>
