@@ -12,6 +12,7 @@ export interface Product {
   colors?: string[]
   sizes?: string[]
   features?: string[]
+  photos?: string[]
   // Pricing calculation fields
   minQuantity?: number
   maxQuantity?: number

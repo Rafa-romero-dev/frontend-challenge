@@ -19,6 +19,7 @@ const ProductDetail = ({
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [quantity, setQuantity] = useState<number>(1);
+  const [mainPhotoIdx, setMainPhotoIdx] = useState<number>(0);
 
   useEffect(() => {
     setLoading(true);
@@ -68,6 +69,11 @@ const ProductDetail = ({
   // Validate product status
   const canAddToCart = product.status === "active" && product.stock > 0;
 
+  // Always use a safe index for main photo
+  const safePhotoIdx = product.photos && product.photos.length > 0
+    ? Math.min(mainPhotoIdx, product.photos.length - 1)
+    : 0;
+
   return (
     <div className="product-detail-page">
       <div className="container">
@@ -84,19 +90,44 @@ const ProductDetail = ({
           {/* Product Images */}
           <div className="product-images">
             <div className="main-image">
-              <div className="image-placeholder">
-                <span className="material-icons">image</span>
-              </div>
-            </div>
-
-            {/* Bug: thumbnails don't work */}
-            <div className="image-thumbnails">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="thumbnail">
+              {product.photos && product.photos.length > 0 ? (
+                <img
+                  src={product.photos[safePhotoIdx]}
+                  alt={product.name}
+                  className="product-img-real"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', background: '#f3f3f3' }}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x300?text=Sin+Imagen';
+                  }}
+                />
+              ) : (
+                <div className="image-placeholder">
                   <span className="material-icons">image</span>
                 </div>
-              ))}
+              )}
             </div>
+
+            {product.photos && product.photos.length > 1 && (
+              <div className="image-thumbnails">
+                {product.photos.map((photo, idx) => (
+                  <div
+                    key={idx}
+                    className={`thumbnail${safePhotoIdx === idx ? ' selected' : ''}`}
+                    style={{ cursor: 'pointer', border: safePhotoIdx === idx ? '2px solid #0070f3' : '2px solid transparent', borderRadius: 6, padding: 2, background: '#fff' }}
+                    onClick={() => setMainPhotoIdx(idx)}
+                  >
+                    <img
+                      src={photo}
+                      alt={`Miniatura ${idx + 1}`}
+                      style={{ width: 48, height: 36, objectFit: 'cover', borderRadius: 4 }}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://via.placeholder.com/48x36?text=Sin+Img';
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Info */}

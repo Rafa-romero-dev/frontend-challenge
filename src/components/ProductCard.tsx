@@ -49,11 +49,22 @@ const ProductCard = ({ product, onQuoteProduct }: ProductCardProps) => {
       <Link to={`/product/${product.id}`} className="product-link">
         {/* Product Image */}
         <div className="product-image">
-          {/* Bug: no real image handling */}
-          <div className="image-placeholder">
-            <span className="material-icons">image</span>
-          </div>
-          
+          {product.photos && product.photos.length > 0 ? (
+            <img
+              src={product.photos[0]}
+              alt={product.name}
+              className="product-img-real"
+              loading="lazy"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', background: '#f3f3f3' }}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Sin+Imagen';
+              }}
+            />
+          ) : (
+            <div className="image-placeholder">
+              <span className="material-icons">image</span>
+            </div>
+          )}
           {/* Status Badge */}
           <div className="product-status">
             {getStatusBadge(product.status)}
@@ -76,12 +87,15 @@ const ProductCard = ({ product, onQuoteProduct }: ProductCardProps) => {
             {getStockStatus(product.stock)}
           </div>
 
-          {/* Features - Bug: displays all features without limit */}
-          {product.features && (
+          {/* Features - show only first 2, and '+N más' if more */}
+          {product.features && product.features.length > 0 && (
             <div className="product-features">
-              {product.features.map((feature, index) => (
+              {product.features.slice(0, 2).map((feature, index) => (
                 <span key={index} className="feature-tag l1">{feature}</span>
               ))}
+              {product.features.length > 2 && (
+                <span className="feature-tag l1">+{product.features.length - 2} más</span>
+              )}
             </div>
           )}
 
